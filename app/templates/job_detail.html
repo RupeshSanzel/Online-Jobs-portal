@@ -1,0 +1,48 @@
+<!-- templates/job_detail.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2 class="mb-0">{{ job.title }}</h2>
+    </div>
+    <div class="card-body">
+        <h4 class="card-subtitle mb-3 text-muted">{{ job.company }}</h4>
+        <p><strong>Location:</strong> {{ job.location }}</p>
+        <p><strong>Salary:</strong> {{ job.salary or 'Not specified' }}</p>
+        
+        <h5>Job Description</h5>
+        <p class="card-text">{{ job.description }}</p>
+        
+        {% if job.requirements %}
+        <h5>Requirements</h5>
+        <p class="card-text">{{ job.requirements }}</p>
+        {% endif %}
+        
+        <p class="text-muted">Posted on {{ job.posted_date.strftime('%Y-%m-%d') }}</p>
+        
+        {% if current_user.is_authenticated and not current_user.is_employer %}
+        <hr>
+        <h5>Apply for this position</h5>
+        <form method="POST" action="{{ url_for('jobs.apply_job', job_id=job.id) }}">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                {{ form.resume.label(class="form-label") }}
+                {{ form.resume(class="form-control", rows=5) }}
+                {% for error in form.resume.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.cover_letter.label(class="form-label") }}
+                {{ form.cover_letter(class="form-control", rows=5) }}
+                {% for error in form.cover_letter.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            {{ form.submit(class="btn btn-primary") }}
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

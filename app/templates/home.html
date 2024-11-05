@@ -1,0 +1,38 @@
+<!-- templates/home.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">Welcome to Job Portal</h1>
+    <p class="lead">Find your dream job or post job opportunities.</p>
+    <hr class="my-4">
+    {% if current_user.is_authenticated %}
+        {% if current_user.is_employer %}
+            <a class="btn btn-primary btn-lg" href="{{ url_for('jobs.post_job') }}">Post a Job</a>
+        {% else %}
+            <a class="btn btn-primary btn-lg" href="{{ url_for('jobs.job_list') }}">Browse Jobs</a>
+        {% endif %}
+    {% else %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('auth.register') }}">Get Started</a>
+    {% endif %}
+</div>
+
+<h2 class="mt-5">Recent Job Postings</h2>
+<div class="row">
+    {% for job in jobs %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ job.title }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{ job.company }}</h6>
+                <p class="card-text">{{ job.description[:200] }}...</p>
+                <a href="{{ url_for('jobs.job_detail', job_id=job.id) }}" class="card-link">View Details</a>
+            </div>
+            <div class="card-footer text-muted">
+                Posted {{ job.posted_date.strftime('%Y-%m-%d') }}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

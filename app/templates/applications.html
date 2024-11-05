@@ -1,0 +1,48 @@
+<!-- templates/applications.html -->
+{% extends "base.html" %} {% block content %}
+<h2>My Applications</h2>
+{% if applications %}
+<div class="row">
+  {% for application in applications %}
+  <div class="col-md-6 mb-4">
+    <div class="card">
+      <!-- In templates/applications.html, update the card body -->
+      <div class="card-body">
+        <h5 class="card-title">{{ application.job.title }}</h5>
+        <h6 class="card-subtitle mb-2 text-muted">
+          {{ application.job.company }}
+        </h6>
+        <p class="card-text">
+          <strong>Status:</strong>
+          <span
+            class="badge bg-{{ 'success' if application.status == 'selected' 
+                                else 'danger' if application.status == 'rejected'
+                                else 'info' if application.status == 'viewed'
+                                else 'warning' }}"
+          >
+            {{ application.status.title() }}
+          </span>
+        </p>
+        {% if application.feedback %}
+        <div class="mt-3">
+          <strong>Feedback:</strong>
+          <p class="card-text">{{ application.feedback }}</p>
+        </div>
+        {% endif %}
+        <p class="card-text">
+          <strong>Applied Date:</strong> {{
+          application.applied_date.strftime('%Y-%m-%d') }}
+        </p>
+        <a
+          href="{{ url_for('jobs.job_detail', job_id=application.job.id) }}"
+          class="btn btn-primary"
+          >View Job</a
+        >
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">You haven't applied to any jobs yet.</div>
+{% endif %} {% endblock %}

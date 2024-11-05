@@ -1,0 +1,139 @@
+<!-- templates/manage_applications.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Manage Applications</h2>
+
+{% for job in jobs %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h3>{{ job.title }}</h3>
+        <p class="text-muted mb-0">{{ job.company }} - Posted on {{ job.posted_date.strftime('%Y-%m-%d') }}</p>
+    </div>
+    <div class="card-body">
+        {% if applications_by_job[job.id] %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Applicant</th>
+                        <th>Applied Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for application in applications_by_job[job.id] %}
+                    <tr>
+                        <td>{{ application.applicant.username }}</td>
+                        <td>{{ application.applied_date.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if application.status == 'selected' 
+                                                    else 'danger' if application.status == 'rejected'
+                                                    else 'info' if application.status == 'viewed'
+                                                    else 'warning' }}">
+                                {{ application.status.title() }}
+                            </span>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-primary btn-sm" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#applicationModal{{ application.id }}">
+                                View Details
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    <!-- Modal for each application -->
+                    <div class="modal fade" id="applicationModal{{ application.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Application Details</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <h6>Resume</h6>
+                                    <div class="border p-3 mb-3">
+                                        {{ application.resume }}
+                                    </div>
+                                    
+                                    {% if application.cover_letter %}
+                                    <h6>Cover Letter</h6>
+                                    <div class="border p-3 mb-3">
+                                        {{ application.cover_letter }}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <form id="statusForm{{application.id}}" 
+                                          onsubmit="updateApplicationStatus(event, '{{ application.id }}')">
+                                        <div class="mb-3">
+                                            <label class="form-label">Update Status</label>
+                                            <select name="status" class="form-select">
+                                                <option value="pending" 
+                                                        {% if application.status == 'pending' %}selected{% endif %}>
+                                                    Pending
+                                                </option>
+                                                <option value="viewed" 
+                                                        {% if application.status == 'viewed' %}selected{% endif %}>
+                                                    Viewed
+                                                </option>
+                                                <option value="selected" 
+                                                        {% if application.status == 'selected' %}selected{% endif %}>
+                                                    Selected
+                                                </option>
+                                                <option value="rejected" 
+                                                        {% if application.status == 'rejected' %}selected{% endif %}>
+                                                    Rejected
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Feedback (optional)</label>
+                                            <textarea name="feedback" class="form-control" rows="3">{{ application.feedback or '' }}</textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Update Status</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No applications received yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+
+<!-- Add this JavaScript at the bottom of the template -->
+<script>
+async function updateApplicationStatus(event, applicationId) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    try {
+        const response = await fetch(`/update-application-status/${applicationId}`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Refresh the page to show updated status
+            location.reload();
+        } else {
+            alert('Error updating application status: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error updating application status');
+        console.error(error);
+    }
+}
+</script>
+{% endblock %}
